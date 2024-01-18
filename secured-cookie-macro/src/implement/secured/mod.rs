@@ -45,8 +45,15 @@ pub fn secured_impl(attributes_stream: Stream, function_stream: Stream) -> Strea
 
     let braces = block.brace_token;
 
-    let function_body =
-        build_new_function_body(session, roles, unauthorized_code, forbidden_code, block);
+    let original_code = wrap_original_code(block);
+
+    let function_body = build_new_function_body(
+        session,
+        roles,
+        unauthorized_code,
+        forbidden_code,
+        original_code,
+    );
 
     sig.output = build_output_type();
 
@@ -65,13 +72,19 @@ fn build_output_type() -> ReturnType {
     syn::parse_str(" -> actix_cookie_security::HttpResult").unwrap()
 }
 
+fn wrap_original_code(original_code: Block) -> TokenStream {
+    parse_quote! {
+        actix_cookie_security::WrapperHttpResult::from(#original_code)
+    }
+}
+
 fn build_unauthorized_block(unauthorized_function: Option<Ident>) -> TokenStream {
     match unauthorized_function {
         Some(function) => quote::quote! {
-            actix_cookie_security::WrapperHttpResult::from(#function().await).0
+            actix_cookie_security::WrapperHttpResult::from(#function())
         },
         None => quote::quote! {
-            actix_cookie_security::WrapperHttpResult::from(HttpResponse::Unauthorized().finish()).0
+            actix_cookie_security::WrapperHttpResult::from(HttpResponse::Unauthorized().finish())
         },
     }
 }
@@ -79,10 +92,10 @@ fn build_unauthorized_block(unauthorized_function: Option<Ident>) -> TokenStream
 fn build_forbidden_block(forbidden_function: Option<Ident>) -> TokenStream {
     match forbidden_function {
         Some(function) => quote::quote! {
-            actix_cookie_security::WrapperHttpResult::from(#function().await).0
+            actix_cookie_security::WrapperHttpResult::from(#function())
         },
         None => quote::quote! {
-            actix_cookie_security::WrapperHttpResult::from(HttpResponse::Forbidden().finish()).0
+            actix_cookie_security::WrapperHttpResult::from(HttpResponse::Forbidden().finish())
         },
     }
 }
@@ -92,7 +105,7 @@ fn build_new_function_body(
     roles: Group,
     unauthorized_code: TokenStream,
     forbidden_code: TokenStream,
-    original_code: Block,
+    original_code: TokenStream,
 ) -> Vec<Stmt> {
     parse_quote! {
 
@@ -100,17 +113,15 @@ fn build_new_function_body(
         let has_access = #session.has_access(&#roles);
 
         let mut result = if is_authorized && has_access {
-            actix_cookie_security::HttpResult::from(#original_code)
+            #original_code.0
         } else if !is_authorized {
-            #unauthorized_code
+            #unauthorized_code.0
         } else {
-            #forbidden_code
+            #forbidden_code.0
         };
 
         if let Ok(mut response) = result.as_mut() {
-            response
-                .add_cookie(&#session.cookie())
-                .map_err(actix_cookie_security::ApplicationError::from)?;
+            response.add_cookie(&#session.cookie())?;
         }
 
         result

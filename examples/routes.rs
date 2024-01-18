@@ -19,7 +19,7 @@ async fn login(app: web::Data<Application>) -> Result<HttpResponse, ApiError> {
 
 #[get("/guest_handle")]
 async fn guest_handle() -> HttpResponse {
-    HttpResponse::Ok().finish()
+    HttpResponse::Ok().body("guest_handle")
 }
 
 #[secured(session, [Role::Editor])]
@@ -28,20 +28,20 @@ async fn editor_handle(
     _app: web::Data<Application>,
     session: Session,
 ) -> Result<HttpResponse, ApiError> {
-    Ok(HttpResponse::Ok().finish())
+    Ok(HttpResponse::Ok().body("editor_handle"))
 }
 
 #[secured(session, [Role::Admin])]
 #[get("/admin_handle")]
-async fn admin_handle(session: Session) -> Result<HttpResponse, ExampleCustomError> {
-    Ok(HttpResponse::Ok().finish())
+async fn admin_handle(session: Session) -> HttpResponse {
+    HttpResponse::Ok().body("admin_handle 2")
 }
 
-async fn custom_unauthorized() -> Result<HttpResponse, ApiError> {
-    Ok(HttpResponse::Unauthorized().finish())
+fn custom_unauthorized() -> HttpResponse {
+    HttpResponse::Unauthorized().finish()
 }
 
-async fn custom_forbidden() -> HttpResponse {
+fn custom_forbidden() -> HttpResponse {
     HttpResponse::Forbidden().finish()
 }
 
@@ -56,7 +56,7 @@ async fn editor_admin_handle(
     _app: web::Data<Application>,
     session: Session,
 ) -> Result<HttpResponse, ApiError> {
-    Ok(HttpResponse::Ok().finish())
+    Ok(HttpResponse::Ok().body("editor_admin_handle"))
 }
 
 #[get("/logout")]

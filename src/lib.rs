@@ -9,7 +9,6 @@ pub use secured_cookie_macro::secured;
 
 mod error;
 
-pub use error::ApplicationError;
 pub use error::HttpResult;
 
 pub use error::WrapperHttpResult;
