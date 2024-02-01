@@ -1,3 +1,5 @@
+#![allow(unused_variables, dead_code)]
+
 use actix_cookie_security::{secured, SecuredSession};
 use actix_web::{get, post, web, HttpResponse};
 
@@ -19,22 +21,19 @@ async fn login(app: web::Data<Application>) -> Result<HttpResponse, ApiError> {
 
 #[get("/guest_handle")]
 async fn guest_handle() -> HttpResponse {
-    HttpResponse::Ok().body("guest_handle")
+    HttpResponse::Ok().finish()
 }
 
 #[secured(session, [Role::Editor])]
 #[get("/editor_handle")]
-async fn editor_handle(
-    _app: web::Data<Application>,
-    session: Session,
-) -> Result<HttpResponse, ApiError> {
-    Ok(HttpResponse::Ok().body("editor_handle"))
+async fn editor_handle(session: Session) -> Result<HttpResponse, ApiError> {
+    Ok(HttpResponse::Ok().finish())
 }
 
 #[secured(session, [Role::Admin])]
 #[get("/admin_handle")]
 async fn admin_handle(session: Session) -> HttpResponse {
-    HttpResponse::Ok().body("admin_handle 2")
+    HttpResponse::Ok().finish()
 }
 
 fn custom_unauthorized() -> HttpResponse {
@@ -52,11 +51,8 @@ fn custom_forbidden() -> HttpResponse {
     forbidden_function = custom_forbidden
 )]
 #[get("/editor_admin_handle")]
-async fn editor_admin_handle(
-    _app: web::Data<Application>,
-    session: Session,
-) -> Result<HttpResponse, ApiError> {
-    Ok(HttpResponse::Ok().body("editor_admin_handle"))
+async fn editor_admin_handle(session: Session) -> Result<HttpResponse, ExampleCustomError> {
+    Ok(HttpResponse::Ok().finish())
 }
 
 #[get("/logout")]

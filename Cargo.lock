@@ -51,6 +51,7 @@ dependencies = [
  "actix",
  "actix-web",
  "async-trait",
+ "futures",
  "reqwest",
  "secured-cookie-macro",
  "secured-cookie-middleware",
